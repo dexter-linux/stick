@@ -7,4 +7,4 @@ st.title("🏰 Tower Math Defense PWA")
 st.markdown("Defeat enemies in ascending arithmetic order! Play using **Desktop Arrow Keys** or **Mobile Touch Buttons** below.")
 
 # Render local index.html game inside Streamlit iframe
-st.iframe("index.html", height=780, scrolling=False)
+st.iframe("index.html", height=780)
