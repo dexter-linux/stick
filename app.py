@@ -1,78 +1,88 @@
 import streamlit as st
 import streamlit.components.v1 as components
 
-# Configure page layout
+# Configure Streamlit Page Layout
 st.set_page_config(page_title="Tower Math Defense PWA", page_icon="🏰", layout="centered")
 
 st.title("🏰 Tower Math Defense PWA")
-st.markdown("Defeat enemies in ascending arithmetic order! Play using **Desktop Arrow Keys** or **Mobile Touch Buttons** below.")
+st.markdown("Defeat enemies in ascending arithmetic order by moving into adjacent tiles! Use **Desktop Arrow Keys** or **Mobile Touch Buttons** below.")
 
-# Self-contained game HTML/CSS/JS string
+# Self-contained game HTML, CSS, and Canvas Game Engine
 game_html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Tower Math Defense PWA</title>
+    <title>Tower Math Defense</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
         }
 
         body {
-            background: #0f172a;
+            background: #090d16;
             color: #f8fafc;
             display: flex;
             justify-content: center;
-            align-items: flex-start;
+            align-items: center;
             min-height: 100vh;
             padding: 10px;
         }
 
         #game-container {
             text-align: center;
-            background: #1e293b;
-            padding: 16px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            padding: 20px;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 15px rgba(56, 189, 248, 0.1);
             max-width: 440px;
             width: 100%;
-            margin: 0 auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
         header h1 {
-            font-size: 1.25rem;
-            margin-bottom: 4px;
+            font-size: 1.4rem;
+            margin-bottom: 6px;
             color: #38bdf8;
+            letter-spacing: 0.5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
 
         #score-board {
-            font-size: 1rem;
-            font-weight: bold;
-            margin-bottom: 12px;
-            color: #cbd5e1;
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #e2e8f0;
+            background: rgba(15, 23, 42, 0.6);
+            padding: 8px 12px;
+            border-radius: 10px;
+            display: inline-block;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+        }
+
+        #score-board span {
+            color: #38bdf8;
         }
 
         canvas {
-            background: #090d16;
-            border: 3px solid #334155;
-            border-radius: 8px;
+            background: #050b14;
+            border: 2px solid #334155;
+            border-radius: 12px;
             display: block;
-            margin: 0 auto 12px auto;
-            max-width: 100%;
-            height: auto;
+            margin: 0 auto 16px auto;
+            box-shadow: inset 0 4px 8px rgba(0,0,0,0.5);
         }
 
         #touch-controls {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 6px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 14px;
         }
 
         .control-row {
@@ -81,43 +91,56 @@ game_html = """
         }
 
         .ctrl-btn {
-            background: #38bdf8;
+            background: linear-gradient(135deg, #38bdf8, #0284c7);
             color: #0f172a;
             border: none;
-            font-size: 1.4rem;
-            width: 60px;
-            height: 48px;
-            border-radius: 10px;
+            font-size: 1.5rem;
+            width: 68px;
+            height: 52px;
+            border-radius: 12px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
-            transition: background 0.2s;
+            box-shadow: 0 6px 12px rgba(2, 132, 199, 0.3);
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .ctrl-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(56, 189, 248, 0.4);
         }
 
         .ctrl-btn:active {
-            background: #0284c7;
-            transform: scale(0.95);
+            transform: translateY(1px);
+            box-shadow: 0 2px 4px rgba(2, 132, 199, 0.2);
         }
 
         #game-message {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: #94a3b8;
-            margin-bottom: 10px;
+            margin-bottom: 14px;
+            min-height: 24px;
+            line-height: 1.3;
         }
 
         #restart-btn {
-            background: #ef4444;
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
             border: none;
-            padding: 8px 16px;
-            font-size: 0.9rem;
+            padding: 10px 22px;
+            font-size: 0.95rem;
             font-weight: bold;
-            border-radius: 8px;
+            border-radius: 10px;
             cursor: pointer;
-            transition: background 0.2s;
+            box-shadow: 0 4px 10px rgba(239, 68, 68, 0.3);
+            transition: all 0.2s;
         }
 
         #restart-btn:hover {
-            background: #dc2626;
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -129,7 +152,7 @@ game_html = """
         </header>
 
         <main>
-            <canvas id="gameCanvas" width="400" height="450"></canvas>
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
         </main>
 
         <!-- On-Screen Touch Controls -->
@@ -144,7 +167,7 @@ game_html = """
             </div>
         </div>
 
-        <div id="game-message">Use Arrow Keys or On-Screen Controls. Defeat lower values first!</div>
+        <div id="game-message">Move into adjacent tiles. Defeat lower values first!</div>
         <button id="restart-btn" onclick="resetGame()">Restart Level</button>
     </div>
 
@@ -174,7 +197,7 @@ game_html = """
             playerPos = { r: 4, c: 2 };
             playerPower = 15;
             gameState = "PLAYING";
-            document.getElementById("game-message").innerText = "Use Arrow Keys or Touch Controls. Defeat lower values first!";
+            document.getElementById("game-message").innerText = "Move into adjacent tiles. Defeat lower values first!";
             draw();
         }
 
@@ -184,14 +207,19 @@ game_html = """
             let newR = playerPos.r + dr;
             let newC = playerPos.c + dc;
 
+            // Enforce grid boundaries
             if (newR < 0 || newR >= ROWS || newC < 0 || newC >= COLS) return;
+
+            // Enforce adjacency rule (must step to immediate neighboring tile)
+            let rowDiff = Math.abs(newR - playerPos.r);
+            let colDiff = Math.abs(newC - playerPos.c);
+            if (rowDiff + colDiff !== 1) return;
 
             let target = grid[newR][newC];
 
             if (target.type === 'empty') {
-                grid[playerPos.r][playerPos.c] = { type: 'empty', val: 0 };
-                playerPos = { r: newR, c: newC };
-                grid[newR][newC] = { type: 'player', val: playerPower };
+                document.getElementById("game-message").innerText = "⚠️ You cannot step into empty cleared slots!";
+                return;
             } 
             else if (target.type === 'enemy') {
                 if (playerPower > target.val) {
@@ -199,10 +227,11 @@ game_html = """
                     grid[playerPos.r][playerPos.c] = { type: 'empty', val: 0 };
                     playerPos = { r: newR, c: newC };
                     grid[newR][newC] = { type: 'player', val: playerPower };
+                    document.getElementById("game-message").innerText = "⚔️ Defeated enemy " + target.val + "! Power increased.";
                     checkWinCondition();
                 } else {
                     gameState = "LOST";
-                    document.getElementById("game-message").innerText = "❌ Defeat! Your power is too low to beat " + target.val + ".";
+                    document.getElementById("game-message").innerText = "❌ Defeat! Your power (" + playerPower + ") is too low to beat " + target.val + ".";
                 }
             }
             draw();
@@ -221,6 +250,18 @@ game_html = """
             }
         }
 
+        function drawRoundedRect(ctx, x, y, width, height, radius, fillColor, strokeColor) {
+            ctx.beginPath();
+            ctx.roundRect(x, y, width, height, radius);
+            ctx.fillStyle = fillColor;
+            ctx.fill();
+            if (strokeColor) {
+                ctx.strokeStyle = strokeColor;
+                ctx.lineWidth = 2;
+                ctx.stroke();
+            }
+        }
+
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             document.getElementById("player-power").innerText = playerPower;
@@ -228,37 +269,43 @@ game_html = """
             for (let r = 0; r < ROWS; r++) {
                 for (let c = 0; c < COLS; c++) {
                     let cell = grid[r][c];
-                    let x = c * TILE_SIZE;
-                    let y = r * TILE_SIZE;
+                    let x = c * TILE_SIZE + 6;
+                    let y = r * TILE_SIZE + 6;
+                    let size = TILE_SIZE - 12;
 
                     if (cell.type === 'player') {
-                        ctx.fillStyle = '#0284c7';
-                    } else if (cell.type === 'enemy') {
-                        ctx.fillStyle = cell.val <= playerPower ? '#16a34a' : '#dc2626';
-                    } else {
-                        ctx.fillStyle = '#1e293b';
-                    }
-
-                    ctx.fillRect(x + 4, y + 4, TILE_SIZE - 8, TILE_SIZE - 8);
-                    ctx.strokeStyle = '#475569';
-                    ctx.strokeRect(x + 4, y + 4, TILE_SIZE - 8, TILE_SIZE - 8);
-
-                    if (cell.type === 'player') {
+                        // Polished Hero Card Style
+                        drawRoundedRect(ctx, x, y, size, size, 10, '#0284c7', '#38bdf8');
                         ctx.fillStyle = '#ffffff';
-                        ctx.font = 'bold 16px sans-serif';
+                        ctx.font = 'bold 13px sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText("HERO", x + TILE_SIZE/2, y + TILE_SIZE/2 - 8);
-                        ctx.fillText(playerPower, x + TILE_SIZE/2, y + TILE_SIZE/2 + 14);
-                    } else if (cell.type === 'enemy') {
+                        ctx.fillText("🛡️ HERO", x + size/2, y + size/2 - 8);
+                        ctx.font = 'bold 16px sans-serif';
+                        ctx.fillStyle = '#f0f9ff';
+                        ctx.fillText(playerPower, x + size/2, y + size/2 + 14);
+                    } 
+                    else if (cell.type === 'enemy') {
+                        // Dynamic color-coding: green if beatable, red if deadly
+                        let isBeatable = cell.val < playerPower;
+                        let bgColor = isBeatable ? '#15803d' : '#b91c1c';
+                        let borderColor = isBeatable ? '#4ade80' : '#f87171';
+                        
+                        drawRoundedRect(ctx, x, y, size, size, 10, bgColor, borderColor);
+                        
                         ctx.fillStyle = '#ffffff';
                         ctx.font = 'bold 18px sans-serif';
                         ctx.textAlign = 'center';
-                        ctx.fillText(cell.val, x + TILE_SIZE/2, y + TILE_SIZE/2 + 6);
+                        ctx.fillText(cell.val, x + size/2, y + size/2 + 6);
+                    } 
+                    else {
+                        // Empty cleared slot
+                        drawRoundedRect(ctx, x, y, size, size, 10, '#1e293b', '#334155');
                     }
                 }
             }
         }
 
+        // Keyboard Event Listeners
         window.addEventListener('keydown', (e) => {
             switch (e.key) {
                 case 'ArrowUp': case 'w': movePlayer(-1, 0); break;
@@ -268,16 +315,18 @@ game_html = """
             }
         });
 
+        // Touch Control Listeners
         document.getElementById('btn-up').addEventListener('click', () => movePlayer(-1, 0));
         document.getElementById('btn-down').addEventListener('click', () => movePlayer(1, 0));
         document.getElementById('btn-left').addEventListener('click', () => movePlayer(0, -1));
         document.getElementById('btn-right').addEventListener('click', () => movePlayer(0, 1));
 
+        // Initial render
         draw();
     </script>
 </body>
 </html>
 """
 
-# Render the game inside Streamlit component
-components.html(game_html, height=780, scrolling=False)
+# Render game inside Streamlit component
+components.html(game_html, height=760, scrolling=False)
